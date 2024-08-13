@@ -15,6 +15,8 @@
 //---
 
 #define MAX_ARGS_NUMB 2
+#define MAX_FIELD_SIZE 128
+#define MAX_VALUE_SIZE 115
 
 //---
 
@@ -32,12 +34,51 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-
     // check keyword
     char* flag;
     strcpy(flag, argv[1]);
+    // check if creating file
     if (strcmp(flag, "-n") || strcmp(flag, "--new")) {
-        
+        // get file name
+        char* file_name;
+        strcpy(file_name, argv[2]);
+
+        // open streams
+        FILE* ptr_file = fopen(file_name, "w+");
+        if (ptr_file == NULL) {
+            fprintf(stderr, "%s[ERROR]%s: Failed while creating the new file\n", color_red, color_reset);
+            exit(2);
+        }
+
+        FILE* ptr_template = fopen("./note-template.md", "w+");
+        if (ptr_file == NULL) {
+            fprintf(stderr, "%s[ERROR]%s: Failed while opening template file\n", color_red, color_reset);
+            exit(2);
+        }
+
+        // each line from template
+        char field[MAX_FIELD_SIZE];
+        char value[MAX_VALUE_SIZE];
+        // get line until EOF
+        while (fgets(field, MAX_FIELD_SIZE, ptr_template) != NULL) {
+            
+            // null terminate string
+            field[strcspn(field, "\n")] = '\0';
+            
+            // print on stout
+            fprintf(stdout, "%s", field);
+
+            // get input from stdin
+            sscanf(stdin, "%s", value);
+            
+/// handle exiding size of the array
+
+            // append value to field
+            strcat(field, value);
+
+            // write line on the new file
+            fputs(field, ptr_file);
+        }
     }
 
     return 0;
