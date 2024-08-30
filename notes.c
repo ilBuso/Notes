@@ -9,6 +9,7 @@
 //---
 
 #include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -46,6 +47,13 @@ int main(int argc, char* argv[]) {
         char file_name[MAX_FILENAME_SIZE];
         strcpy(file_name, argv[2]);
 
+        // check if a file named that way already exists
+        int already_exists = access(file_name, F_OK);
+        if (!already_exists) {
+            fprintf(stderr, "%s[ERROR]%s: A file with this name already exists\n", color_red, color_reset);
+            exit(2);
+        }
+
         // open streams
         FILE* ptr_file = fopen(file_name, "w+");
         if (ptr_file == NULL) {
@@ -66,7 +74,8 @@ int main(int argc, char* argv[]) {
         // get line until EOF
         while (fgets(field, MAX_FIELD_SIZE, ptr_template) != NULL) {
 
-            if (strcmp(field, "---\n") && !strcmp(field, "\n")) {
+            // if the string is the start/end of the metadata section ot the new line at the bottom
+            if (strcmp(field, "---\n") && strcmp(field, "\n")) {
                 
                 // null terminate string
                 field[strcspn(field, "\n")] = '\0';
