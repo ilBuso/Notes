@@ -8,5 +8,11 @@ compile:
 run:
 	@./notes --new ciao.md
 
+open:
+	@code ciao.md
+
+save:
+	@./notes --save ciao.md
+
 clean:
 	@rm ciao.md notes
