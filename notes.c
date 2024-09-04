@@ -44,7 +44,7 @@ Metadata get_metadata(char file_name[]) {
     // declare array
     static Metadata metadata;
     
-    // open stram
+    // open stream
     FILE* ptr_file = fopen(file_name, "r");
     if (ptr_file == NULL) {
         fprintf(stderr, "%s[ERROR]%s: Failed while opening the file\n", color_red, color_reset);
@@ -58,11 +58,11 @@ Metadata get_metadata(char file_name[]) {
     while (fgets(field, MAX_FIELD_SIZE, ptr_file) != NULL && fgets(value, MAX_VALUE_SIZE, ptr_file) != NULL) {
         
         // if "Tag"/"Argument" line then save value and set boolean
-        if (strncmp(field, "Tag", 3)) {
+        if (strncmp(field, "Tag", 3) == 0) {
             strcpy(metadata.tags, value);
-        } else if (strncmp(field, "Argument", 8)) {
+        } else if (strncmp(field, "Argument", 8) == 0) {
             strcpy(metadata.arguments, value);
-        } else if (strcmp(field, "---\n")) {
+        } else if (strcmp(field, "---\n") == 0) {
             if (!twice) {
                 twice = true;
             } else {
@@ -117,7 +117,7 @@ void new(char file_name[]) {
     while (fgets(field, MAX_FIELD_SIZE, ptr_template) != NULL) {
 
         // if the string is the start/end of the metadata section ot the new line at the bottom
-        if (strcmp(field, "---\n") && strcmp(field, "\n")) {
+        if (strcmp(field, "---\n") != 0 && strcmp(field, "\n") != 0) {
             
             // null terminate string
             field[strcspn(field, "\n")] = '\0';
@@ -128,9 +128,9 @@ void new(char file_name[]) {
             // get input from stdin
             fgets(value, sizeof(value), stdin);
 
-            if (strncmp(field, "Tag", 3)) {
+            if (strncmp(field, "Tag", 3) == 0) {
                 strcpy(tags, value);
-            } else if (strncmp(field, "Argument", 8)) {
+            } else if (strncmp(field, "Argument", 8) == 0) {
                 strcpy(arguments, value);
             }
 
@@ -152,13 +152,13 @@ void save(char file_name[]) {
     metadata = get_metadata(file_name);
 
     // create basic folders if they don't already exist
-    mkdir("./notes", 0777);
-    mkdir("./notes/arguments", 0777);
-    mkdir("./notes/tags", 0777);
+    mkdir("./note", 0777);
+    mkdir("./note/arguments", 0777);
+    mkdir("./note/tags", 0777);
 
     // create the local path to the right tag folder
     char arguments_file[MAX_VALUE_SIZE];
-    strcpy(arguments_file, "./notes/arguments/");
+    strcpy(arguments_file, "./note/arguments/");
     strcat(arguments_file, metadata.arguments);
     strcat(arguments_file, ".md");
 
@@ -186,7 +186,7 @@ void save(char file_name[]) {
 
     // create the local path to the right tag folder
     char tags_folder[MAX_VALUE_SIZE];
-    strcpy(tags_folder, "./notes/tags/");
+    strcpy(tags_folder, "./note/tags/");
     strcat(tags_folder, metadata.tags);
 
     // create the folder if not already exists
@@ -220,13 +220,13 @@ int main(int argc, char* argv[]) {
     strcpy(flag, argv[1]);
 
     // check if creating file
-    if (strcmp(flag, "-n") || strcmp(flag, "--new")) {
+    if (strcmp(flag, "-n") == 0 || strcmp(flag, "--new") == 0) {
         // get file name
         char file_name[MAX_FILENAME_SIZE];
         strcpy(file_name, argv[2]);
 
         new(file_name);
-    } else if (strcmp(flag, "-s") || strcmp(flag, "--save")) {
+    } else if (strcmp(flag, "-s") == 0 || strcmp(flag, "--save") == 0) {
         // get file name
         char file_name[MAX_FILENAME_SIZE];
         strcpy(file_name, argv[2]);

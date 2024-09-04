@@ -3,9 +3,9 @@ SHELL := /bin/bash
 FILE_NAME = notes.c
 
 compile:
-	@gcc -o $(basename $(FILE_NAME)) $(FILE_NAME)
+	@gcc -Wall -o $(basename $(FILE_NAME)) $(FILE_NAME)
 
-run:
+new:
 	@./notes --new ciao.md
 
 open:
