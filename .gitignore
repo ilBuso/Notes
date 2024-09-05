@@ -1,0 +1,5 @@
+# Ignore notes executable
+notes
+
+# Ignore notes folder
+note/
