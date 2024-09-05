@@ -15,4 +15,4 @@ save:
 	@./notes --save ciao.md
 
 clean:
-	@rm ciao.md notes
+	@rm -rf note ciao.md notes
