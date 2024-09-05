@@ -20,8 +20,8 @@
 #define MAX_ARGS_NUMB 3
 #define MAX_FLAG_SIZE 32
 #define MAX_FILENAME_SIZE 255 // imposed by GNU/Linux
-#define MAX_FIELD_SIZE 128
-#define MAX_VALUE_SIZE 115
+#define MAX_FIELD_SIZE 13
+#define MAX_VALUE_SIZE 242
 
 //---
 
@@ -35,14 +35,14 @@ typedef struct {
     char tags[MAX_VALUE_SIZE];
     char arguments[MAX_VALUE_SIZE];
     int fd;
-    off_t page_offset;
+    int page_offset;
 } Metadata;
 
 //---
 
 Metadata get_metadata(char file_name[]) {
     // declare array
-    static Metadata metadata;
+    Metadata metadata;
     
     // open stream
     FILE* ptr_file = fopen(file_name, "r");
@@ -55,23 +55,27 @@ Metadata get_metadata(char file_name[]) {
     char value[MAX_VALUE_SIZE];
     bool twice = false;
     // get every line field and value until the EOF
-    while (fgets(field, MAX_FIELD_SIZE, ptr_file) != NULL && fgets(value, MAX_VALUE_SIZE, ptr_file) != NULL) {
-        
-        // if "Tag"/"Argument" line then save value and set boolean
-        if (strncmp(field, "Tag", 3) == 0) {
-            strcpy(metadata.tags, value);
-        } else if (strncmp(field, "Argument", 8) == 0) {
-            strcpy(metadata.arguments, value);
-        } else if (strcmp(field, "---\n") == 0) {
+    while (fgets(field, MAX_FIELD_SIZE, ptr_file) != NULL) {
+        // if beginning or end of metadata 
+        if (strcmp(field, "---\n") == 0) {
             if (!twice) {
                 twice = true;
             } else {
                 // get the file descriptor of the file
                 metadata.fd = fileno(ptr_file);
                 // get the pointer value
-                metadata.page_offset = lseek(metadata.fd, 0, SEEK_CUR);
+                metadata.page_offset = ftell(ptr_file) + 1;
                 // exit the loop
                 break;
+            }
+        } else if (fgets(value, MAX_VALUE_SIZE, ptr_file) != NULL) {
+            // if "Tag"/"Argument" line then save value and set boolean
+            if (strncmp(field, "Tag", 3) == 0) {
+                value[strcspn(value, "\n")] = '\0';
+                strcpy(metadata.tags, value);
+            } else if (strncmp(field, "Argument", 8) == 0) {
+                value[strcspn(value, "\n")] = '\0';
+                strcpy(metadata.arguments, value);
             }
         }
     }
@@ -110,8 +114,6 @@ void new(char file_name[]) {
     // each line from template
     char field[MAX_FIELD_SIZE];
     char value[MAX_VALUE_SIZE];
-    char tags[MAX_VALUE_SIZE];
-    char arguments[MAX_VALUE_SIZE];
 
     // get line until EOF
     while (fgets(field, MAX_FIELD_SIZE, ptr_template) != NULL) {
@@ -127,12 +129,7 @@ void new(char file_name[]) {
 
             // get input from stdin
             fgets(value, sizeof(value), stdin);
-
-            if (strncmp(field, "Tag", 3) == 0) {
-                strcpy(tags, value);
-            } else if (strncmp(field, "Argument", 8) == 0) {
-                strcpy(arguments, value);
-            }
+            value[strcspn(value, "\n")] = '\0';
 
             // append value to field
             strcat(field, value);
@@ -150,7 +147,6 @@ void new(char file_name[]) {
 void save(char file_name[]) {
     Metadata metadata;
     metadata = get_metadata(file_name);
-
     // create basic folders if they don't already exist
     mkdir("./note", 0777);
     mkdir("./note/arguments", 0777);
@@ -165,22 +161,22 @@ void save(char file_name[]) {
     // open stream
     FILE* ptr_file = fopen(file_name, "r");
     if (ptr_file == NULL) {
-        fprintf(stderr, "%s[ERROR]%s: Failed while creating the new file\n", color_red, color_reset);
+        fprintf(stderr, "%s[ERROR]%s: Failed while opening the file\n", color_red, color_reset);
         exit(2);
     }
 
-    FILE* ptr_arg = fopen(arguments_file, "a");
+    FILE* ptr_arg = fopen(arguments_file, "w+");
     if (ptr_arg == NULL) {
         fprintf(stderr, "%s[ERROR]%s: Failed while accessing/creating the argument file\n", color_red, color_reset);
         exit(2);
     }
 
     // ignora metadata
-    lseek(metadata.fd, metadata.page_offset, SEEK_SET);
+    lseek(metadata.fd, metadata.page_offset, SEEK_CUR);
 
     // copy all the text in the file to the new file
     int c;
-    while ((c = fgetc(ptr_file)) != -1) {
+    while ((c = fgetc(ptr_file)) != EOF) {
         fputc(c, ptr_arg);
     }
 
@@ -192,8 +188,13 @@ void save(char file_name[]) {
     // create the folder if not already exists
     mkdir(tags_folder, 0777);
 
+    char tag_file[MAX_FILENAME_SIZE];
+    strcpy(tag_file, tags_folder);
+    strcat(tag_file, "/");
+    strcat(tag_file, file_name);
+
     // move file to the right tag directory
-    int move = rename(file_name, tags_folder);
+    int move = rename(file_name, tag_file);
     if (move == -1) {
         fprintf(stderr, "%s[ERROR]%s: Failed while moving file to the tag directory\n", color_red, color_reset);
         exit(3);
@@ -202,7 +203,6 @@ void save(char file_name[]) {
     // close stream
     fclose(ptr_file);
     fclose(ptr_arg);
-
 }
 
 //---
