@@ -3,7 +3,7 @@
     Author: ilBuso
     Date:   12th August 2024
 
-    Spiegare a cosa serve sto script e e sue funzionalità
+    Simple note organizer for notes
 */
 
 //---
@@ -72,10 +72,14 @@ Metadata get_metadata(char file_name[]) {
         } else if (fgets(value, MAX_VALUE_SIZE, ptr_file) != NULL) {
             // if "Tag"/"Argument" line then save value and set boolean
             if (strncmp(field, "Tag", 3) == 0) {
+                // null terminate string
                 value[strcspn(value, "\n")] = '\0';
+                // save value
                 strcpy(metadata.tags, value);
             } else if (strncmp(field, "Argument", 8) == 0) {
+                // null terminate string
                 value[strcspn(value, "\n")] = '\0';
+                // save value
                 strcpy(metadata.arguments, value);
             }
         }
@@ -128,14 +132,20 @@ void new(char file_name[]) {
             // print on stout
             fprintf(stdout, "%s", field);
 
-            // get input from stdin
+            // if is date field 
             if (strncmp(field, "Date", 4) == 0) {
+                // get time
                 time_t t = time(NULL);
                 struct tm tm = *localtime(&t);
+                // format value string
                 sprintf(value, "%d-%02d-%02d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+                // print of stdout
                 fprintf(stdout, "%s", value);
             } else {
+                // get value from user
                 fgets(value, sizeof(value), stdin);
+                
+                //null terminate string
                 value[strcspn(value, "\n")] = '\0';
             }
 
@@ -242,5 +252,6 @@ int main(int argc, char* argv[]) {
         save(file_name);
     }
 
+    // end
     return 0;
 }
