@@ -14,6 +14,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <stdbool.h>
+#include <time.h>
 
 //---
 
@@ -123,13 +124,20 @@ void new(char file_name[]) {
             
             // null terminate string
             field[strcspn(field, "\n")] = '\0';
-            
+
             // print on stout
             fprintf(stdout, "%s", field);
 
             // get input from stdin
-            fgets(value, sizeof(value), stdin);
-            value[strcspn(value, "\n")] = '\0';
+            if (strncmp(field, "Date", 4) == 0) {
+                time_t t = time(NULL);
+                struct tm tm = *localtime(&t);
+                sprintf(value, "%d-%02d-%02d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+                fprintf(stdout, "%s", value);
+            } else {
+                fgets(value, sizeof(value), stdin);
+                value[strcspn(value, "\n")] = '\0';
+            }
 
             // append value to field
             strcat(field, value);
